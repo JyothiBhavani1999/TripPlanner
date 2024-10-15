@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Group Travel Planner</title>
+  <!-- Link to the CSS file -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Interactive Group Travel Planner</h1>
+    <p>Real-time trip planning tool</p>
+
+    <!-- Input for joining a trip -->
+    <div id="trip-section">
+      <h3>Join a Trip</h3>
+      <input type="text" id="trip-id" placeholder="Enter Trip ID">
+      <button id="join-trip-btn">Join Trip</button>
+    </div>
+
+    <!-- Display for the shared itinerary -->
+    <div id="itinerary-section" style="display:none;">
+      <h3>Itinerary</h3>
+      <ul id="itinerary-list"></ul>
+
+      <!-- Input for adding items to the itinerary -->
+      <input type="text" id="itinerary-input" placeholder="Add item to itinerary">
+      <button id="add-item-btn">Add Item</button>
+    </div>
+  </div>
+
+  <!-- Include Socket.IO and client.js -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js"></script>
+</body>
+</html>
