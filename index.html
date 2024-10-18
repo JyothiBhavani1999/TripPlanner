@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Group Travel Planner</title>
   <!-- Link to the CSS file -->
   <link rel="stylesheet" href="styles.css">
@@ -16,17 +15,30 @@
     <div id="trip-section">
       <h3>Join a Trip</h3>
       <input type="text" id="trip-id" placeholder="Enter Trip ID">
+      <input type="text" id="username" placeholder="Enter Your Name">
       <button id="join-trip-btn">Join Trip</button>
     </div>
 
-    <!-- Display for the shared itinerary -->
-    <div id="itinerary-section" style="display:none;">
-      <h3>Itinerary</h3>
-      <ul id="itinerary-list"></ul>
+    <!-- Display for the shared itinerary and chat -->
+    <div id="main-content" style="display:none;">
+      <div id="itinerary-section">
+        <h3>Itinerary</h3>
+        <ul id="itinerary-list"></ul>
 
-      <!-- Input for adding items to the itinerary -->
-      <input type="text" id="itinerary-input" placeholder="Add item to itinerary">
-      <button id="add-item-btn">Add Item</button>
+        <!-- Input for adding items to the itinerary -->
+        <input type="text" id="itinerary-input" placeholder="Add item to itinerary">
+        <button id="add-item-btn">Add Item</button>
+      </div>
+
+      <!-- Chat section -->
+      <div id="chat-section">
+        <h3>Chat</h3>
+        <div id="chat-window">
+          <ul id="messages"></ul>
+        </div>
+        <input type="text" id="chat-input" placeholder="Type your message">
+        <button id="send-chat-btn">Send</button>
+      </div>
     </div>
   </div>
 

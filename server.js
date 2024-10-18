@@ -49,13 +49,17 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('A user connected');
 
+  // Store the username associated with this socket
+  let username = 'Anonymous';
+
   // Handle when a user joins a trip
-  socket.on('joinTrip', async (tripId) => {
+  socket.on('joinTrip', async ({ tripId, username: user }) => {
     if (!tripId) {
       return socket.emit('error', 'Invalid trip ID.');
     }
 
     console.log(`User joined trip: ${tripId}`);
+    username = user || 'Anonymous';
 
     try {
       let trip = await Trip.findOne({ tripId });
@@ -90,7 +94,7 @@ io.on('connection', (socket) => {
       const trip = await Trip.findOne({ tripId });
 
       if (trip) {
-        // Add the item to the trip's itinerary with 0 likes, ensuring the structure is correct
+        // Add the item to the trip's itinerary with 0 likes
         trip.itinerary.push({ name: item, likes: 0 });
 
         // Save the updated trip to the database
@@ -104,6 +108,18 @@ io.on('connection', (socket) => {
     } catch (err) {
       console.error(`Error adding item to trip: ${err.message}`);
     }
+  });
+
+  // Handle receiving a chat message
+  socket.on('sendMessage', ({ tripId, message }) => {
+    if (!tripId || !message) {
+      return;
+    }
+
+    console.log(`Message received in trip ${tripId}: ${message}`);
+
+    // Broadcast the message to all users in the trip
+    io.to(tripId).emit('receiveMessage', { username, message });
   });
 
   // Handle liking an item
