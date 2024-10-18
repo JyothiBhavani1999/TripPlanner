@@ -15,17 +15,22 @@ const io = socketIO(server);
 const PORT = process.env.PORT || 4000;
 
 // MongoDB connection using environment variable from .env
-const dbURL = process.env.MONGODB_URI || 'mongodb://localhost:27017/travelPlanner';
+const dbURL = process.env.MONGODB_URI;
 
 // Connect to MongoDB
 mongoose.connect(dbURL)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => console.log('Connected to MongoDB Atlas'))
   .catch((err) => console.error('Could not connect to MongoDB:', err));
 
 // Mongoose schema for a Trip
 const tripSchema = new mongoose.Schema({
   tripId: { type: String, required: true, unique: true },
-  itinerary: [String]  // Array of itinerary items
+  itinerary: [
+    {
+      name: String,
+      likes: { type: Number, default: 0 }
+    }
+  ]
 });
 
 // Mongoose model for a Trip
@@ -46,10 +51,13 @@ io.on('connection', (socket) => {
 
   // Handle when a user joins a trip
   socket.on('joinTrip', async (tripId) => {
+    if (!tripId) {
+      return socket.emit('error', 'Invalid trip ID.');
+    }
+
     console.log(`User joined trip: ${tripId}`);
 
     try {
-      // Try to find the trip by tripId in the database
       let trip = await Trip.findOne({ tripId });
 
       // If the trip doesn't exist, create a new one
@@ -72,15 +80,18 @@ io.on('connection', (socket) => {
 
   // Handle adding an item to the itinerary
   socket.on('addItem', async ({ tripId, item }) => {
+    if (!tripId || !item) {
+      return socket.emit('error', 'Invalid trip ID or item.');
+    }
+
     console.log(`Adding item to trip ${tripId}: ${item}`);
 
     try {
-      // Find the trip in the database
       const trip = await Trip.findOne({ tripId });
 
       if (trip) {
-        // Add the item to the trip's itinerary
-        trip.itinerary.push(item);
+        // Add the item to the trip's itinerary with 0 likes, ensuring the structure is correct
+        trip.itinerary.push({ name: item, likes: 0 });
 
         // Save the updated trip to the database
         await trip.save();
@@ -92,6 +103,39 @@ io.on('connection', (socket) => {
       }
     } catch (err) {
       console.error(`Error adding item to trip: ${err.message}`);
+    }
+  });
+
+  // Handle liking an item
+  socket.on('likeItem', async ({ tripId, itemName }) => {
+    if (!tripId || !itemName) {
+      return socket.emit('error', 'Invalid trip ID or item name.');
+    }
+
+    console.log(`User liked item ${itemName} in trip ${tripId}`);
+
+    try {
+      const trip = await Trip.findOne({ tripId });
+
+      if (trip) {
+        // Find the item in the itinerary and increment its likes
+        const item = trip.itinerary.find(i => i.name === itemName);
+        if (item) {
+          item.likes += 1;
+
+          // Save the updated trip to the database
+          await trip.save();
+
+          // Broadcast the updated itinerary to all users in the trip
+          io.to(tripId).emit('updateItinerary', trip.itinerary);
+        } else {
+          console.error(`Item ${itemName} not found in trip ${tripId}.`);
+        }
+      } else {
+        console.error(`Trip with ID ${tripId} not found.`);
+      }
+    } catch (err) {
+      console.error(`Error liking item: ${err.message}`);
     }
   });
 

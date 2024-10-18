@@ -34,8 +34,21 @@ addItemBtn.addEventListener('click', () => {
 socket.on('updateItinerary', (itinerary) => {
   itineraryList.innerHTML = ''; // Clear the existing list
   itinerary.forEach((item) => {
-    const li = document.createElement('li');
-    li.textContent = item;
-    itineraryList.appendChild(li);
+    if (item.name) {  // Ensure the item has a name
+      const li = document.createElement('li');
+      li.innerHTML = `
+        ${item.name} - Liked by ${item.likes} users
+        <button class="like-btn" data-item="${item.name}">Like</button>
+      `;
+      itineraryList.appendChild(li);
+    }
+  });
+
+  // Add event listeners to the like buttons
+  document.querySelectorAll('.like-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+      const itemName = event.target.getAttribute('data-item');
+      socket.emit('likeItem', { tripId: currentTripId, itemName });
+    });
   });
 });
