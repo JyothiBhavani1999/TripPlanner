@@ -24,7 +24,7 @@ joinTripBtn.addEventListener('click', () => {
     currentTripId = tripId;
     socket.emit('joinTrip', { tripId, username });
     tripSection.style.display = 'none';
-    mainContent.style.display = 'flex'; // Use flex to display sections side by side
+    mainContent.style.display = 'flex'; // Display itinerary and chat
   }
 });
 
@@ -33,7 +33,7 @@ addItemBtn.addEventListener('click', () => {
   const item = itineraryInput.value.trim();
   if (item && currentTripId) {
     socket.emit('addItem', { tripId: currentTripId, item });
-    itineraryInput.value = ''; // Clear the input after sending
+    itineraryInput.value = ''; // Clear input after sending
   }
 });
 
@@ -41,21 +41,30 @@ addItemBtn.addEventListener('click', () => {
 socket.on('updateItinerary', (itinerary) => {
   itineraryList.innerHTML = ''; // Clear the existing list
   itinerary.forEach((item) => {
-    if (item.name) {  // Ensure the item has a name
+    if (item.name) {
       const li = document.createElement('li');
       li.innerHTML = `
-        ${item.name} - Liked by ${item.likes} users
-        <button class="like-btn" data-item="${item.name}">Like</button>
+        ${item.name} - Upvotes: ${item.upvotes}, Downvotes: ${item.downvotes}
+        <button class="upvote-btn" data-item="${item.name}">Upvote</button>
+        <button class="downvote-btn" data-item="${item.name}">Downvote</button>
       `;
       itineraryList.appendChild(li);
     }
   });
 
-  // Add event listeners to the like buttons
-  document.querySelectorAll('.like-btn').forEach(button => {
+  // Add event listeners to the upvote buttons
+  document.querySelectorAll('.upvote-btn').forEach(button => {
     button.addEventListener('click', (event) => {
       const itemName = event.target.getAttribute('data-item');
-      socket.emit('likeItem', { tripId: currentTripId, itemName });
+      socket.emit('voteItem', { tripId: currentTripId, itemName, vote: 'upvote' });
+    });
+  });
+
+  // Add event listeners to the downvote buttons
+  document.querySelectorAll('.downvote-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+      const itemName = event.target.getAttribute('data-item');
+      socket.emit('voteItem', { tripId: currentTripId, itemName, vote: 'downvote' });
     });
   });
 });
@@ -65,7 +74,7 @@ sendChatBtn.addEventListener('click', () => {
   const message = chatInput.value.trim();
   if (message && currentTripId) {
     socket.emit('sendMessage', { tripId: currentTripId, message });
-    chatInput.value = ''; // Clear the input after sending
+    chatInput.value = ''; // Clear input after sending
   }
 });
 

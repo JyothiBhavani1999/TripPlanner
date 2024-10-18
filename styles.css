@@ -33,3 +33,19 @@
     border-radius: 5px;
   }
   
+  .upvote-btn, .downvote-btn {
+    margin-left: 10px;
+    padding: 5px;
+    background-color: lightgreen;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .downvote-btn {
+    background-color: lightcoral;
+  }
+  
+  .upvote-btn:hover, .downvote-btn:hover {
+    opacity: 0.8;
+  }
+  

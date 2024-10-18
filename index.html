@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Interactive Group Travel Planner</title>
-  <!-- Link to the CSS file -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,7 +10,6 @@
     <h1>Interactive Group Travel Planner</h1>
     <p>Real-time trip planning tool</p>
 
-    <!-- Input for joining a trip -->
     <div id="trip-section">
       <h3>Join a Trip</h3>
       <input type="text" id="trip-id" placeholder="Enter Trip ID">
@@ -19,18 +17,14 @@
       <button id="join-trip-btn">Join Trip</button>
     </div>
 
-    <!-- Display for the shared itinerary and chat -->
     <div id="main-content" style="display:none;">
       <div id="itinerary-section">
         <h3>Itinerary</h3>
         <ul id="itinerary-list"></ul>
-
-        <!-- Input for adding items to the itinerary -->
         <input type="text" id="itinerary-input" placeholder="Add item to itinerary">
         <button id="add-item-btn">Add Item</button>
       </div>
 
-      <!-- Chat section -->
       <div id="chat-section">
         <h3>Chat</h3>
         <div id="chat-window">
@@ -42,7 +36,6 @@
     </div>
   </div>
 
-  <!-- Include Socket.IO and client.js -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
 </body>
