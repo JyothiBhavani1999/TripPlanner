@@ -20,6 +20,8 @@ mongoose.connect(dbURL)
 // Mongoose schema for a Trip
 const tripSchema = new mongoose.Schema({
   tripId: { type: String, required: true, unique: true },
+  destinationCity: { type: String, required: false },
+  destinationCountry: { type: String, required: false },
   itinerary: [
     {
       name: String,
@@ -41,14 +43,20 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Handle client connections via Socket.IO
+// Handle checking if a trip exists
 io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  let username = 'Anonymous';
+  socket.on('checkTrip', async ({ tripId }, callback) => {
+    try {
+      const trip = await Trip.findOne({ tripId });
+      callback(trip !== null);
+    } catch (err) {
+      console.error('Error checking trip existence:', err.message);
+      callback(false);
+    }
+  });
 
   // Handle when a user joins a trip
-  socket.on('joinTrip', async ({ tripId, username: user }) => {
+  socket.on('joinTrip', async ({ tripId, username: user, destinationCity, destinationCountry }) => {
     if (!tripId) return socket.emit('error', 'Invalid trip ID.');
     username = user || 'Anonymous';
     console.log(`User joined trip: ${tripId}`);
@@ -56,10 +64,16 @@ io.on('connection', (socket) => {
     try {
       let trip = await Trip.findOne({ tripId });
       if (!trip) {
-        trip = new Trip({ tripId, itinerary: [] });
+        // If the trip doesn't exist, create it with the city and country
+        if (!destinationCity || !destinationCountry) {
+          return socket.emit('error', 'New trips must include a destination city and country.');
+        }
+        trip = new Trip({ tripId, itinerary: [], destinationCity, destinationCountry });
         await trip.save();
-        console.log(`Created a new trip with ID: ${tripId}`);
+        console.log(`Created a new trip with ID: ${tripId} and destination: ${destinationCity}, ${destinationCountry}`);
       }
+
+      // Join the trip and emit the itinerary
       socket.join(tripId);
       socket.emit('updateItinerary', trip.itinerary);
     } catch (err) {

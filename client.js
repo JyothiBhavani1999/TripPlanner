@@ -20,11 +20,46 @@ let currentTripId = null;
 joinTripBtn.addEventListener('click', () => {
   const tripId = tripIdInput.value.trim();
   const username = usernameInput.value.trim() || 'Anonymous';
+  const destinationCity = document.getElementById('destination-city').value.trim();
+  const destinationCountry = document.getElementById('destination-country').value.trim();
+
   if (tripId) {
-    currentTripId = tripId;
-    socket.emit('joinTrip', { tripId, username });
-    tripSection.style.display = 'none';
-    mainContent.style.display = 'flex'; // Display itinerary and chat
+    // Emit an event to check if the trip already exists
+    socket.emit('checkTrip', { tripId }, (tripExists) => {
+      if (tripExists) {
+        // If the trip exists, join without asking for city/country
+        currentTripId = tripId; // Set the current trip ID
+        socket.emit('joinTrip', { tripId, username });
+        tripSection.style.display = 'none';
+        mainContent.style.display = 'flex'; // Display itinerary and chat
+      } else {
+        // If the trip doesn't exist, ensure that city and country are provided
+        if (destinationCity && destinationCountry) {
+          currentTripId = tripId; // Set the current trip ID for the new trip
+          socket.emit('joinTrip', { tripId, username, destinationCity, destinationCountry });
+          tripSection.style.display = 'none';
+          mainContent.style.display = 'flex'; // Display itinerary and chat
+        } else {
+          alert('Please enter the destination city and country for the new trip.');
+        }
+      }
+    });
+  }
+});
+
+// Show city/country fields only when creating a new trip
+tripIdInput.addEventListener('input', () => {
+  const tripId = tripIdInput.value.trim();
+  if (tripId) {
+    // Ask server whether the trip exists
+    socket.emit('checkTrip', { tripId }, (tripExists) => {
+      const destinationSection = document.getElementById('destination-section');
+      if (tripExists) {
+        destinationSection.style.display = 'none';
+      } else {
+        destinationSection.style.display = 'block';
+      }
+    });
   }
 });
 
@@ -34,6 +69,8 @@ addItemBtn.addEventListener('click', () => {
   if (item && currentTripId) {
     socket.emit('addItem', { tripId: currentTripId, item });
     itineraryInput.value = ''; // Clear input after sending
+  } else {
+    alert('Please join a trip before adding items.');
   }
 });
 
@@ -75,6 +112,8 @@ sendChatBtn.addEventListener('click', () => {
   if (message && currentTripId) {
     socket.emit('sendMessage', { tripId: currentTripId, message });
     chatInput.value = ''; // Clear input after sending
+  } else {
+    alert('Please join a trip before sending messages.');
   }
 });
 
