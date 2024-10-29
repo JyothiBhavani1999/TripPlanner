@@ -49,3 +49,9 @@
     opacity: 0.8;
   }
   
+  #map {
+    height: 400px;
+    width: 100%;
+    display: none; /* Initially hidden */
+    margin-top: 20px;
+}
