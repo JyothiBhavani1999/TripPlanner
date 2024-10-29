@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Interactive Group Travel Planner</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBM8o-3sJaWx6NqIoVX65qQWniSqf2H7zc" async defer></script>
 </head>
 <body>
   <div class="container">
@@ -37,6 +39,9 @@
         <input type="text" id="chat-input" placeholder="Type your message">
         <button id="send-chat-btn">Send</button>
       </div>
+
+      <!-- Map Section -->
+      <div id="map" style="height: 400px; width: 100%; display: none; margin-top: 20px;"></div>
     </div>
   </div>
 

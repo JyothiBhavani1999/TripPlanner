@@ -8,37 +8,59 @@ const tripIdInput = document.getElementById('trip-id');
 const usernameInput = document.getElementById('username');
 const itineraryInput = document.getElementById('itinerary-input');
 const itineraryList = document.getElementById('itinerary-list');
+const mapElement = document.getElementById('map');
 
 // Chat elements
 const messagesList = document.getElementById('messages');
 const chatInput = document.getElementById('chat-input');
 const sendChatBtn = document.getElementById('send-chat-btn');
 
+let map;
+let markers = [];
 let currentTripId = null;
+let currentUsername = null;
+
+// Initialize Google Map when called
+function initMap() {
+  map = new google.maps.Map(mapElement, {
+    center: { lat: 0, lng: 0 },
+    zoom: 2
+  });
+
+  // Add marker on map click
+  map.addListener('click', (e) => {
+    const latLng = e.latLng;
+    const marker = new google.maps.Marker({
+      position: latLng,
+      map: map
+    });
+    markers.push(marker);
+
+    // Emit marker data to the server
+    if (currentTripId) {
+      socket.emit('addMarker', { tripId: currentTripId, lat: latLng.lat(), lng: latLng.lng() });
+    }
+  });
+}
 
 // Handle joining a trip
 joinTripBtn.addEventListener('click', () => {
   const tripId = tripIdInput.value.trim();
-  const username = usernameInput.value.trim() || 'Anonymous';
+  currentUsername = usernameInput.value.trim() || 'Anonymous';
   const destinationCity = document.getElementById('destination-city').value.trim();
   const destinationCountry = document.getElementById('destination-country').value.trim();
 
   if (tripId) {
-    // Emit an event to check if the trip already exists
     socket.emit('checkTrip', { tripId }, (tripExists) => {
       if (tripExists) {
-        // If the trip exists, join without asking for city/country
-        currentTripId = tripId; // Set the current trip ID
-        socket.emit('joinTrip', { tripId, username });
-        tripSection.style.display = 'none';
-        mainContent.style.display = 'flex'; // Display itinerary and chat
+        currentTripId = tripId;
+        socket.emit('joinTrip', { tripId, username: currentUsername });
+        displayMainContent(); // Show the main content including the map
       } else {
-        // If the trip doesn't exist, ensure that city and country are provided
         if (destinationCity && destinationCountry) {
-          currentTripId = tripId; // Set the current trip ID for the new trip
-          socket.emit('joinTrip', { tripId, username, destinationCity, destinationCountry });
-          tripSection.style.display = 'none';
-          mainContent.style.display = 'flex'; // Display itinerary and chat
+          currentTripId = tripId;
+          socket.emit('joinTrip', { tripId, username: currentUsername, destinationCity, destinationCountry });
+          displayMainContent(); // Show the main content including the map
         } else {
           alert('Please enter the destination city and country for the new trip.');
         }
@@ -47,18 +69,27 @@ joinTripBtn.addEventListener('click', () => {
   }
 });
 
+// Show the main content, including the map
+function displayMainContent() {
+  tripSection.style.display = 'none';
+  mainContent.style.display = 'flex';
+  mapElement.style.display = 'block'; // Show the map container
+
+  // Ensure the map is initialized and displayed properly
+  if (!map) {
+    initMap();
+  } else {
+    google.maps.event.trigger(map, 'resize');
+  }
+}
+
 // Show city/country fields only when creating a new trip
 tripIdInput.addEventListener('input', () => {
   const tripId = tripIdInput.value.trim();
   if (tripId) {
-    // Ask server whether the trip exists
     socket.emit('checkTrip', { tripId }, (tripExists) => {
       const destinationSection = document.getElementById('destination-section');
-      if (tripExists) {
-        destinationSection.style.display = 'none';
-      } else {
-        destinationSection.style.display = 'block';
-      }
+      destinationSection.style.display = tripExists ? 'none' : 'block';
     });
   }
 });
@@ -68,7 +99,7 @@ addItemBtn.addEventListener('click', () => {
   const item = itineraryInput.value.trim();
   if (item && currentTripId) {
     socket.emit('addItem', { tripId: currentTripId, item });
-    itineraryInput.value = ''; // Clear input after sending
+    itineraryInput.value = '';
   } else {
     alert('Please join a trip before adding items.');
   }
@@ -76,7 +107,7 @@ addItemBtn.addEventListener('click', () => {
 
 // Listen for updates to the itinerary from the server
 socket.on('updateItinerary', (itinerary) => {
-  itineraryList.innerHTML = ''; // Clear the existing list
+  itineraryList.innerHTML = '';
   itinerary.forEach((item) => {
     if (item.name) {
       const li = document.createElement('li');
@@ -89,7 +120,6 @@ socket.on('updateItinerary', (itinerary) => {
     }
   });
 
-  // Add event listeners to the upvote buttons
   document.querySelectorAll('.upvote-btn').forEach(button => {
     button.addEventListener('click', (event) => {
       const itemName = event.target.getAttribute('data-item');
@@ -97,7 +127,6 @@ socket.on('updateItinerary', (itinerary) => {
     });
   });
 
-  // Add event listeners to the downvote buttons
   document.querySelectorAll('.downvote-btn').forEach(button => {
     button.addEventListener('click', (event) => {
       const itemName = event.target.getAttribute('data-item');
@@ -110,8 +139,8 @@ socket.on('updateItinerary', (itinerary) => {
 sendChatBtn.addEventListener('click', () => {
   const message = chatInput.value.trim();
   if (message && currentTripId) {
-    socket.emit('sendMessage', { tripId: currentTripId, message });
-    chatInput.value = ''; // Clear input after sending
+    socket.emit('sendMessage', { tripId: currentTripId, username: currentUsername, message });
+    chatInput.value = '';
   } else {
     alert('Please join a trip before sending messages.');
   }
@@ -122,7 +151,19 @@ socket.on('receiveMessage', (data) => {
   const li = document.createElement('li');
   li.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
   messagesList.appendChild(li);
-
-  // Scroll to the bottom of the chat window
   messagesList.scrollTop = messagesList.scrollHeight;
+});
+
+// Listen for marker updates from the server
+socket.on('updateMarkers', (markerData) => {
+  markers.forEach(marker => marker.setMap(null)); // Clear existing markers
+  markers = [];
+
+  markerData.forEach(data => {
+    const marker = new google.maps.Marker({
+      position: { lat: data.lat, lng: data.lng },
+      map: map
+    });
+    markers.push(marker);
+  });
 });
