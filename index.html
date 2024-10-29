@@ -4,14 +4,18 @@
   <meta charset="UTF-8">
   <title>Interactive Group Travel Planner</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Google Maps API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBM8o-3sJaWx6NqIoVX65qQWniSqf2H7zc" async defer></script>
 </head>
 <body>
-  <div class="container">
+  <!-- Taskbar/Header -->
+  <div class="header">
     <h1>Interactive Group Travel Planner</h1>
     <p>Real-time trip planning tool</p>
+  </div>
 
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Trip Section -->
     <div id="trip-section">
       <h3>Join a Trip</h3>
       <input type="text" id="trip-id" placeholder="Enter Trip ID">
@@ -23,7 +27,9 @@
       <button id="join-trip-btn">Join Trip</button>
     </div>
 
-    <div id="main-content" style="display:none;">
+    <!-- Main Content -->
+    <div id="main-content" style="display: none;">
+      <!-- Itinerary Section -->
       <div id="itinerary-section">
         <h3>Itinerary</h3>
         <ul id="itinerary-list"></ul>
@@ -31,6 +37,7 @@
         <button id="add-item-btn">Add Item</button>
       </div>
 
+      <!-- Chat Section -->
       <div id="chat-section">
         <h3>Chat</h3>
         <div id="chat-window">
