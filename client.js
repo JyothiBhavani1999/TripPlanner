@@ -10,6 +10,10 @@ const itineraryInput = document.getElementById('itinerary-input');
 const itineraryList = document.getElementById('itinerary-list');
 const mapElement = document.getElementById('map');
 
+// New elements for dropdowns
+const countrySelect = document.getElementById('country');
+const stateSelect = document.getElementById('state');
+
 // Chat elements
 const messagesList = document.getElementById('messages');
 const chatInput = document.getElementById('chat-input');
@@ -19,6 +23,37 @@ let map;
 let markers = [];
 let currentTripId = null;
 let currentUsername = null;
+
+// List of countries and US states
+const countries = ["USA"];
+const statesUSA = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
+
+// Populate country dropdown
+countries.forEach(country => {
+  const option = document.createElement('option');
+  option.value = country;
+  option.text = country;
+  countrySelect.add(option);
+});
+
+// Show state dropdown when 'USA' is selected
+countrySelect.addEventListener('change', () => {
+  const selectedCountry = countrySelect.value;
+  if (selectedCountry === 'USA') {
+    stateSelect.style.display = 'block'; // Show state dropdown
+    stateSelect.innerHTML = '<option value="">Select State</option>'; // Reset options
+
+    // Populate state dropdown with US states
+    statesUSA.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.text = state;
+      stateSelect.add(option);
+    });
+  } else {
+    stateSelect.style.display = 'none'; // Hide state dropdown if not 'USA'
+  }
+});
 
 // Initialize Google Map when called
 function initMap() {
@@ -47,8 +82,8 @@ function initMap() {
 joinTripBtn.addEventListener('click', () => {
   const tripId = tripIdInput.value.trim();
   currentUsername = usernameInput.value.trim() || 'Anonymous';
-  const destinationCity = document.getElementById('destination-city').value.trim();
-  const destinationCountry = document.getElementById('destination-country').value.trim();
+  const selectedCountry = countrySelect.value;
+  const selectedState = stateSelect.value;
 
   if (tripId) {
     socket.emit('checkTrip', { tripId }, (tripExists) => {
@@ -57,15 +92,27 @@ joinTripBtn.addEventListener('click', () => {
         socket.emit('joinTrip', { tripId, username: currentUsername });
         displayMainContent(); // Show the main content including the map
       } else {
-        if (destinationCity && destinationCountry) {
+        // Validate country and state selection for new trip
+        if (selectedCountry) {
+          if (selectedCountry === 'USA' && !selectedState) {
+            alert('Please select a state for the USA.');
+            return;
+          }
           currentTripId = tripId;
-          socket.emit('joinTrip', { tripId, username: currentUsername, destinationCity, destinationCountry });
+          socket.emit('joinTrip', {
+            tripId,
+            username: currentUsername,
+            destinationCity: selectedState || 'N/A',
+            destinationCountry: selectedCountry
+          });
           displayMainContent(); // Show the main content including the map
         } else {
-          alert('Please enter the destination city and country for the new trip.');
+          alert('Please select a country.');
         }
       }
     });
+  } else {
+    alert('Please enter a Trip ID.');
   }
 });
 
@@ -120,6 +167,7 @@ socket.on('updateItinerary', (itinerary) => {
     }
   });
 
+  // Add upvote and downvote functionality
   document.querySelectorAll('.upvote-btn').forEach(button => {
     button.addEventListener('click', (event) => {
       const itemName = event.target.getAttribute('data-item');

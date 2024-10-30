@@ -20,9 +20,16 @@
       <h3>Join a Trip</h3>
       <input type="text" id="trip-id" placeholder="Enter Trip ID">
       <input type="text" id="username" placeholder="Enter Your Name">
+      <!-- Destination Section -->
       <div id="destination-section" style="display: none;">
-        <input type="text" id="destination-city" placeholder="Enter Destination City">
-        <input type="text" id="destination-country" placeholder="Enter Destination Country">
+        <select id="country">
+          <option value="">Select Country</option>
+          <!-- Country options will be populated by JavaScript -->
+        </select>
+        <select id="state" style="display: none;">
+          <option value="">Select State</option>
+          <!-- State options will be populated by JavaScript -->
+        </select>
       </div>
       <button id="join-trip-btn">Join Trip</button>
     </div>
