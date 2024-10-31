@@ -34,7 +34,9 @@ const tripSchema = new mongoose.Schema({
       lat: Number,
       lng: Number
     }
-  ]
+  ],
+  mapCenter: { lat: Number, lng: Number }, // New field for map center
+  zoomLevel: { type: Number, default: 4 }  // New field for zoom level
 });
 
 // Mongoose model for a Trip
@@ -69,15 +71,45 @@ io.on('connection', (socket) => {
         if (!destinationCity || !destinationCountry) {
           return socket.emit('error', 'New trips must include a destination city and country.');
         }
-        trip = new Trip({ tripId, destinationCity, destinationCountry, itinerary: [], markers: [] });
+
+        // Set initial map center and zoom
+        const initialCenter = destinationCity === 'N/A' ? { lat: 20.5937, lng: 78.9629 } : { lat: 37.0902, lng: -95.7129 }; // Example for India and USA
+        const initialZoom = destinationCity === 'N/A' ? 4 : 6;
+
+        trip = new Trip({
+          tripId,
+          destinationCity,
+          destinationCountry,
+          itinerary: [],
+          markers: [],
+          mapCenter: initialCenter,
+          zoomLevel: initialZoom
+        });
         await trip.save();
       }
 
       socket.join(tripId);
       socket.emit('updateItinerary', trip.itinerary);
       socket.emit('updateMarkers', trip.markers);
+
+      // Emit the map center and zoom to the user joining the trip
+      socket.emit('centerMap', { lat: trip.mapCenter.lat, lng: trip.mapCenter.lng, zoom: trip.zoomLevel });
     } catch (err) {
       console.error(`Error joining trip: ${err.message}`);
+    }
+  });
+
+  // Save the map's center and zoom level
+  socket.on('saveMapCenter', async ({ tripId, lat, lng, zoom }) => {
+    try {
+      const trip = await Trip.findOne({ tripId });
+      if (trip) {
+        trip.mapCenter = { lat, lng };
+        trip.zoomLevel = zoom;
+        await trip.save();
+      }
+    } catch (err) {
+      console.error(`Error saving map center: ${err.message}`);
     }
   });
 
@@ -108,7 +140,7 @@ io.on('connection', (socket) => {
             item.downvotes += 1;
           }
           await trip.save();
-          io.to(tripId).emit('updateItinerary', trip.itinerary);
+          io.to(tripId).emit('updateVotes', item); // Emit updated item to all users
         }
       }
     } catch (err) {

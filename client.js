@@ -10,7 +10,6 @@ const itineraryInput = document.getElementById('itinerary-input');
 const itineraryList = document.getElementById('itinerary-list');
 const mapElement = document.getElementById('map');
 
-// New elements for dropdowns
 const countrySelect = document.getElementById('country');
 const stateSelect = document.getElementById('state');
 
@@ -28,7 +27,6 @@ let currentUsername = null;
 const countries = ["USA"];
 const statesUSA = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
 
-// Populate country dropdown
 countries.forEach(country => {
   const option = document.createElement('option');
   option.value = country;
@@ -40,10 +38,9 @@ countries.forEach(country => {
 countrySelect.addEventListener('change', () => {
   const selectedCountry = countrySelect.value;
   if (selectedCountry === 'USA') {
-    stateSelect.style.display = 'block'; // Show state dropdown
-    stateSelect.innerHTML = '<option value="">Select State</option>'; // Reset options
+    stateSelect.style.display = 'block'; 
+    stateSelect.innerHTML = '<option value="">Select State</option>'; 
 
-    // Populate state dropdown with US states
     statesUSA.forEach(state => {
       const option = document.createElement('option');
       option.value = state;
@@ -51,7 +48,7 @@ countrySelect.addEventListener('change', () => {
       stateSelect.add(option);
     });
   } else {
-    stateSelect.style.display = 'none'; // Hide state dropdown if not 'USA'
+    stateSelect.style.display = 'none'; 
   }
 });
 
@@ -62,7 +59,6 @@ function initMap() {
     zoom: 2
   });
 
-  // Add marker on map click
   map.addListener('click', (e) => {
     const latLng = e.latLng;
     const marker = new google.maps.Marker({
@@ -71,14 +67,13 @@ function initMap() {
     });
     markers.push(marker);
 
-    // Emit marker data to the server
     if (currentTripId) {
       socket.emit('addMarker', { tripId: currentTripId, lat: latLng.lat(), lng: latLng.lng() });
     }
   });
 }
 
-// Handle joining a trip
+// Handle joining or creating a trip
 joinTripBtn.addEventListener('click', () => {
   const tripId = tripIdInput.value.trim();
   currentUsername = usernameInput.value.trim() || 'Anonymous';
@@ -90,9 +85,8 @@ joinTripBtn.addEventListener('click', () => {
       if (tripExists) {
         currentTripId = tripId;
         socket.emit('joinTrip', { tripId, username: currentUsername });
-        displayMainContent(); // Show the main content including the map
+        displayMainContent(); 
       } else {
-        // Validate country and state selection for new trip
         if (selectedCountry) {
           if (selectedCountry === 'USA' && !selectedState) {
             alert('Please select a state for the USA.');
@@ -105,7 +99,8 @@ joinTripBtn.addEventListener('click', () => {
             destinationCity: selectedState || 'N/A',
             destinationCountry: selectedCountry
           });
-          displayMainContent(); // Show the main content including the map
+          displayMainContent();
+          centerMapOnLocation(selectedCountry, selectedState);
         } else {
           alert('Please select a country.');
         }
@@ -116,13 +111,35 @@ joinTripBtn.addEventListener('click', () => {
   }
 });
 
+// Center the map based on the selected country/state and save to the server
+function centerMapOnLocation(country, state) {
+  const geocoder = new google.maps.Geocoder();
+  let location = state ? `${state}, ${country}` : country;
+
+  geocoder.geocode({ address: location }, (results, status) => {
+    if (status === 'OK' && results[0]) {
+      const newCenter = results[0].geometry.location;
+      map.setCenter(newCenter);
+      map.setZoom(state ? 6 : 4);
+
+      socket.emit('saveMapCenter', {
+        tripId: currentTripId,
+        lat: newCenter.lat(),
+        lng: newCenter.lng(),
+        zoom: state ? 6 : 4
+      });
+    } else {
+      console.error('Geocode was not successful for the following reason: ' + status);
+    }
+  });
+}
+
 // Show the main content, including the map
 function displayMainContent() {
   tripSection.style.display = 'none';
   mainContent.style.display = 'flex';
-  mapElement.style.display = 'block'; // Show the map container
+  mapElement.style.display = 'block';
 
-  // Ensure the map is initialized and displayed properly
   if (!map) {
     initMap();
   } else {
@@ -130,13 +147,17 @@ function displayMainContent() {
   }
 }
 
-// Show city/country fields only when creating a new trip
+// Show or hide country/state fields when creating a new trip
 tripIdInput.addEventListener('input', () => {
   const tripId = tripIdInput.value.trim();
   if (tripId) {
     socket.emit('checkTrip', { tripId }, (tripExists) => {
       const destinationSection = document.getElementById('destination-section');
-      destinationSection.style.display = tripExists ? 'none' : 'block';
+      if (tripExists) {
+        destinationSection.style.display = 'none';
+      } else {
+        destinationSection.style.display = 'block';
+      }
     });
   }
 });
@@ -183,6 +204,24 @@ socket.on('updateItinerary', (itinerary) => {
   });
 });
 
+// Listen for updated votes from the server
+socket.on('updateVotes', (updatedItem) => {
+  const itemElement = document.querySelector(`.upvote-btn[data-item="${updatedItem.name}"]`).parentElement;
+  itemElement.innerHTML = `
+    ${updatedItem.name} - Upvotes: ${updatedItem.upvotes}, Downvotes: ${updatedItem.downvotes}
+    <button class="upvote-btn" data-item="${updatedItem.name}">Upvote</button>
+    <button class="downvote-btn" data-item="${updatedItem.name}">Downvote</button>
+  `;
+
+  // Re-bind the upvote and downvote buttons
+  itemElement.querySelector('.upvote-btn').addEventListener('click', (event) => {
+    socket.emit('voteItem', { tripId: currentTripId, itemName: updatedItem.name, vote: 'upvote' });
+  });
+  itemElement.querySelector('.downvote-btn').addEventListener('click', (event) => {
+    socket.emit('voteItem', { tripId: currentTripId, itemName: updatedItem.name, vote: 'downvote' });
+  });
+});
+
 // Handle sending chat messages
 sendChatBtn.addEventListener('click', () => {
   const message = chatInput.value.trim();
@@ -204,7 +243,7 @@ socket.on('receiveMessage', (data) => {
 
 // Listen for marker updates from the server
 socket.on('updateMarkers', (markerData) => {
-  markers.forEach(marker => marker.setMap(null)); // Clear existing markers
+  markers.forEach(marker => marker.setMap(null)); 
   markers = [];
 
   markerData.forEach(data => {
@@ -214,4 +253,12 @@ socket.on('updateMarkers', (markerData) => {
     });
     markers.push(marker);
   });
+});
+
+// Listen for the event to center the map on the saved location
+socket.on('centerMap', ({ lat, lng, zoom }) => {
+  if (map) {
+    map.setCenter({ lat, lng });
+    map.setZoom(zoom);
+  }
 });
