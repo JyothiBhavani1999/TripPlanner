@@ -63,11 +63,28 @@
   margin-top: 20px;
 }
 
-/* Map Section */
+/* Map container styling */
+#map-container {
+  width: 40%; /* Set width as per your design */
+}
+
 #map {
-  width: 40%;
+  width: 100%; /* Full width within the container */
   height: 500px;
 }
+
+/* Styling for the search bar above the map */
+.map-search {
+  width: 100%; /* Matches map width */
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
 
 /* Itinerary Items Styling */
 #itinerary-list {

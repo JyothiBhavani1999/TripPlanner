@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Interactive Group Travel Planner</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBM8o-3sJaWx6NqIoVX65qQWniSqf2H7zc" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBM8o-3sJaWx6NqIoVX65qQWniSqf2H7zc&libraries=places" async defer></script>
 </head>
 <body>
   <!-- Taskbar/Header -->
@@ -24,11 +24,9 @@
       <div id="destination-section" style="display: none;">
         <select id="country">
           <option value="">Select Country</option>
-          <!-- Country options will be populated by JavaScript -->
         </select>
         <select id="state" style="display: none;">
           <option value="">Select State</option>
-          <!-- State options will be populated by JavaScript -->
         </select>
       </div>
       <button id="join-trip-btn">Join Trip</button>
@@ -55,7 +53,9 @@
       </div>
 
       <!-- Map Section -->
-      <div id="map"></div>
+      <div id="map-container">
+        <input id="map-search" class="map-search" type="text" placeholder="Search for locations..." />
+        <div id="map"></div>
     </div>
   </div>
 

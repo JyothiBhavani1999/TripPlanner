@@ -52,13 +52,60 @@ countrySelect.addEventListener('change', () => {
   }
 });
 
-// Initialize Google Map when called
+// Initialize Google Map when called// Initialize Google Map when called
 function initMap() {
   map = new google.maps.Map(mapElement, {
     center: { lat: 0, lng: 0 },
     zoom: 2
   });
 
+  // Initialize the search bar for location search
+  const input = document.getElementById("map-search");
+  const searchBox = new google.maps.places.SearchBox(input);
+
+  // Bias the SearchBox results towards the map's current viewport.
+  map.addListener("bounds_changed", () => {
+    searchBox.setBounds(map.getBounds());
+  });
+
+  // Place a marker when the user selects a location from the search box
+  searchBox.addListener("places_changed", () => {
+    const places = searchBox.getPlaces();
+
+    if (places.length === 0) {
+      return;
+    }
+
+    // Clear out the old markers.
+    markers.forEach(marker => marker.setMap(null));
+    markers = [];
+
+    // For each place, get the icon, name, and location.
+    const bounds = new google.maps.LatLngBounds();
+    places.forEach(place => {
+      if (!place.geometry || !place.geometry.location) {
+        console.log("Returned place contains no geometry");
+        return;
+      }
+
+      // Create a marker for each place.
+      const marker = new google.maps.Marker({
+        map,
+        title: place.name,
+        position: place.geometry.location
+      });
+      markers.push(marker);
+
+      if (place.geometry.viewport) {
+        bounds.union(place.geometry.viewport);
+      } else {
+        bounds.extend(place.geometry.location);
+      }
+    });
+    map.fitBounds(bounds);
+  });
+
+  // Add marker on map click
   map.addListener('click', (e) => {
     const latLng = e.latLng;
     const marker = new google.maps.Marker({

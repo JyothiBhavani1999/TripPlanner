@@ -94,6 +94,7 @@ io.on('connection', (socket) => {
 
       // Emit the map center and zoom to the user joining the trip
       socket.emit('centerMap', { lat: trip.mapCenter.lat, lng: trip.mapCenter.lng, zoom: trip.zoomLevel });
+      console.log(`Joined trip: ${tripId} with username: ${username}`);
     } catch (err) {
       console.error(`Error joining trip: ${err.message}`);
     }
@@ -122,6 +123,7 @@ io.on('connection', (socket) => {
         await trip.save();
         io.to(tripId).emit('updateItinerary', trip.itinerary);
       }
+      console.log(`Added item: ${item} to trip: ${tripId}`);
     } catch (err) {
       console.error(`Error adding item to trip: ${err.message}`);
     }
@@ -166,6 +168,7 @@ io.on('connection', (socket) => {
   socket.on('sendMessage', ({ tripId, username, message }) => {
     if (!tripId || !message) return;
     io.to(tripId).emit('receiveMessage', { username, message });
+    console.log(`Message sent from ${username}: ${message}`);
   });
 
   socket.on('disconnect', () => {
