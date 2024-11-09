@@ -96,7 +96,7 @@ function initMap() {
       });
       markers.push(marker);
 
-
+      // Add click listener to display place information
       marker.addListener('click', () => {
         const service = new google.maps.places.PlacesService(map);
         service.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
@@ -115,9 +115,10 @@ function initMap() {
               content: contentString
             });
             infoWindow.open(map, marker);
+
+            // Add listener to "Pin Location" button inside the info window
             google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
               document.getElementById("pin-location").addEventListener("click", () => {
-                // Emit marker details to server to save it as a permanent pin
                 socket.emit('addMarker', {
                   tripId: currentTripId,
                   lat: place.geometry.location.lat(),
