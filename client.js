@@ -52,7 +52,7 @@ countrySelect.addEventListener('change', () => {
   }
 });
 
-// Initialize Google Map when called// Initialize Google Map when called
+// Initialize Google Map when called
 function initMap() {
   map = new google.maps.Map(mapElement, {
     center: { lat: 0, lng: 0 },
@@ -96,6 +96,42 @@ function initMap() {
       });
       markers.push(marker);
 
+
+      marker.addListener('click', () => {
+        const service = new google.maps.places.PlacesService(map);
+        service.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            const contentString = `
+              <div>
+                <strong>${placeDetails.name}</strong><br>
+                ${placeDetails.formatted_address}<br>
+                ${placeDetails.opening_hours ? 'Open now: ' + (placeDetails.opening_hours.isOpen() ? 'Yes' : 'No') : ''}<br>
+                ${placeDetails.rating ? 'Rating: ' + placeDetails.rating : ''}<br>
+                <button id="pin-location">Pin Location</button>
+              </div>
+            `;
+
+            const infoWindow = new google.maps.InfoWindow({
+              content: contentString
+            });
+            infoWindow.open(map, marker);
+            google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
+              document.getElementById("pin-location").addEventListener("click", () => {
+                // Emit marker details to server to save it as a permanent pin
+                socket.emit('addMarker', {
+                  tripId: currentTripId,
+                  lat: place.geometry.location.lat(),
+                  lng: place.geometry.location.lng(),
+                  description: `${placeDetails.name}, ${placeDetails.formatted_address}`
+                });
+                infoWindow.close();
+                alert("Location pinned successfully!");
+              });
+            });
+          }
+        });
+      });
+
       if (place.geometry.viewport) {
         bounds.union(place.geometry.viewport);
       } else {
@@ -105,17 +141,30 @@ function initMap() {
     map.fitBounds(bounds);
   });
 
-  // Add marker on map click
+  // Add marker on map click with description
   map.addListener('click', (e) => {
     const latLng = e.latLng;
-    const marker = new google.maps.Marker({
-      position: latLng,
-      map: map
-    });
-    markers.push(marker);
+    const description = prompt("Enter information about this location:");
 
-    if (currentTripId) {
-      socket.emit('addMarker', { tripId: currentTripId, lat: latLng.lat(), lng: latLng.lng() });
+    if (description) {
+      const marker = new google.maps.Marker({
+        position: latLng,
+        map: map
+      });
+      markers.push(marker);
+
+      // Emit marker data to server with description
+      if (currentTripId) {
+        socket.emit('addMarker', { tripId: currentTripId, lat: latLng.lat(), lng: latLng.lng(), description });
+      }
+
+      // Add click listener to show info window with description
+      const infoWindow = new google.maps.InfoWindow({
+        content: description,
+      });
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
     }
   });
 }
@@ -299,6 +348,14 @@ socket.on('updateMarkers', (markerData) => {
       map: map
     });
     markers.push(marker);
+
+    // Display info window with description on marker click
+    const infoWindow = new google.maps.InfoWindow({
+      content: data.description,
+    });
+    marker.addListener('click', () => {
+      infoWindow.open(map, marker);
+    });
   });
 });
 

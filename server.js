@@ -32,7 +32,8 @@ const tripSchema = new mongoose.Schema({
   markers: [
     {
       lat: Number,
-      lng: Number
+      lng: Number,
+      description: String
     }
   ],
   mapCenter: { lat: Number, lng: Number }, // New field for map center
@@ -151,11 +152,11 @@ io.on('connection', (socket) => {
   });
 
   // Handle adding a marker
-  socket.on('addMarker', async ({ tripId, lat, lng }) => {
+  socket.on('addMarker', async ({ tripId, lat, lng, description }) => {
     try {
       const trip = await Trip.findOne({ tripId });
       if (trip) {
-        trip.markers.push({ lat, lng });
+        trip.markers.push({ lat, lng, description });
         await trip.save();
         io.to(tripId).emit('updateMarkers', trip.markers);
       }
