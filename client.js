@@ -104,6 +104,7 @@ function initMap() {
             const contentString = `
               <div>
                 <strong>${placeDetails.name}</strong><br>
+                ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100px; height: auto;">` : ''}<br>
                 ${placeDetails.formatted_address}<br>
                 ${placeDetails.opening_hours ? 'Open now: ' + (placeDetails.opening_hours.isOpen() ? 'Yes' : 'No') : ''}<br>
                 ${placeDetails.rating ? 'Rating: ' + placeDetails.rating : ''}<br>
