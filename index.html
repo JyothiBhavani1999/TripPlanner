@@ -15,11 +15,27 @@
 
   <!-- Main Container -->
   <div class="container">
+    <!-- Authentication Section -->
+    <div id="auth-section">
+      <h3>Signup/Login</h3>
+      <div>
+        <input type="text" id="signup-username" placeholder="Username">
+        <input type="email" id="signup-email" placeholder="Email">
+        <input type="password" id="signup-password" placeholder="Password">
+        <button id="signup-btn">Sign Up</button>
+      </div>
+      <div>
+        <input type="text" id="login-username" placeholder="Username">
+        <input type="password" id="login-password" placeholder="Password">
+        <button id="login-btn">Log In</button>
+      </div>
+      <p id="auth-message" style="color: green;"></p>
+    </div>
+    
     <!-- Trip Section -->
-    <div id="trip-section">
+    <div id="trip-section" style="display: none;">
       <h3>Join a Trip</h3>
       <input type="text" id="trip-id" placeholder="Enter Trip ID">
-      <input type="text" id="username" placeholder="Enter Your Name">
       <!-- Destination Section -->
       <div id="destination-section" style="display: none;">
         <select id="country">
@@ -56,10 +72,72 @@
       <div id="map-container">
         <input id="map-search" class="map-search" type="text" placeholder="Search for locations..." />
         <div id="map"></div>
+      </div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
+  <script>
+    // Handle signup
+    document.getElementById('signup-btn').addEventListener('click', async () => {
+      const username = document.getElementById('signup-username').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      
+      const response = await fetch('/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      
+      const message = await response.text();
+      document.getElementById('auth-message').textContent = message;
+      if (response.ok) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('trip-section').style.display = 'block';
+      }
+    });
+
+    // Handle login
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      
+      const message = await response.text();
+      document.getElementById('auth-message').textContent = message;
+      if (response.ok) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('trip-section').style.display = 'block';
+      }
+    });
+
+    // Handle joining a trip without re-entering the username
+    document.getElementById('join-trip-btn').addEventListener('click', async () => {
+      const tripId = document.getElementById('trip-id').value.trim();
+      const country = document.getElementById('country').value;
+      const state = document.getElementById('state').value;
+
+      const response = await fetch('/join-trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId, destinationCity: state, destinationCountry: country }),
+        credentials: 'include' // Ensure cookies are sent
+      });
+      
+      const message = await response.text();
+      alert(message);
+      if (response.ok) {
+        document.getElementById('trip-section').style.display = 'none';
+        document.getElementById('main-content').style.display = 'flex';
+      }
+    });
+  </script>
 </body>
 </html>

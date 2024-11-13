@@ -18,6 +18,15 @@ const messagesList = document.getElementById('messages');
 const chatInput = document.getElementById('chat-input');
 const sendChatBtn = document.getElementById('send-chat-btn');
 
+// Authentication elements
+const signupBtn = document.getElementById('signup-btn');
+const loginBtn = document.getElementById('login-btn');
+const signupUsername = document.getElementById('signup-username');
+const signupEmail = document.getElementById('signup-email');
+const signupPassword = document.getElementById('signup-password');
+const loginUsername = document.getElementById('login-username');
+const loginPassword = document.getElementById('login-password');
+
 let map;
 let markers = [];
 let currentTripId = null;
@@ -142,39 +151,53 @@ function initMap() {
     });
     map.fitBounds(bounds);
   });
-
-  // Add marker on map click with description
-  map.addListener('click', (e) => {
-    const latLng = e.latLng;
-    const description = prompt("Enter information about this location:");
-
-    if (description) {
-      const marker = new google.maps.Marker({
-        position: latLng,
-        map: map
-      });
-      markers.push(marker);
-
-      // Emit marker data to server with description
-      if (currentTripId) {
-        socket.emit('addMarker', { tripId: currentTripId, lat: latLng.lat(), lng: latLng.lng(), description });
-      }
-
-      // Add click listener to show info window with description
-      const infoWindow = new google.maps.InfoWindow({
-        content: description,
-      });
-      marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-      });
-    }
-  });
 }
+// Signup
+signupBtn.addEventListener('click', () => {
+  const username = signupUsername.value;
+  const email = signupEmail.value;
+  const password = signupPassword.value;
 
-// Handle joining or creating a trip
+  fetch('/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password })
+  }).then(response => {
+    if (response.ok) {
+      currentUsername = username; // Set currentUsername after signup
+      document.getElementById('auth-section').style.display = 'none';
+      tripSection.style.display = 'block';
+    }
+    return response.text();
+  }).then(message => {
+    alert(message);
+  }).catch(console.error);
+});
+
+// Login
+loginBtn.addEventListener('click', () => {
+  const username = loginUsername.value;
+  const password = loginPassword.value;
+
+  fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  }).then(response => {
+    if (response.ok) {
+      currentUsername = username; // Set currentUsername after login
+      document.getElementById('auth-section').style.display = 'none';
+      tripSection.style.display = 'block';
+    }
+    return response.text();
+  }).then(message => {
+    alert(message);
+  }).catch(console.error);
+});
+
+
 joinTripBtn.addEventListener('click', () => {
   const tripId = tripIdInput.value.trim();
-  currentUsername = usernameInput.value.trim() || 'Anonymous';
   const selectedCountry = countrySelect.value;
   const selectedState = stateSelect.value;
 
@@ -208,6 +231,7 @@ joinTripBtn.addEventListener('click', () => {
     alert('Please enter a Trip ID.');
   }
 });
+
 
 // Center the map based on the selected country/state and save to the server
 function centerMapOnLocation(country, state) {
@@ -267,7 +291,7 @@ addItemBtn.addEventListener('click', () => {
     socket.emit('addItem', { tripId: currentTripId, item });
     itineraryInput.value = '';
   } else {
-    alert('Please join a trip before adding items.');
+    alert('Please type before adding items.');
   }
 });
 
@@ -327,9 +351,10 @@ sendChatBtn.addEventListener('click', () => {
     socket.emit('sendMessage', { tripId: currentTripId, username: currentUsername, message });
     chatInput.value = '';
   } else {
-    alert('Please join a trip before sending messages.');
+    alert('Please type before sending messages.');
   }
 });
+
 
 // Listen for chat messages from the server
 socket.on('receiveMessage', (data) => {
@@ -338,6 +363,7 @@ socket.on('receiveMessage', (data) => {
   messagesList.appendChild(li);
   messagesList.scrollTop = messagesList.scrollHeight;
 });
+
 
 // Listen for marker updates from the server
 socket.on('updateMarkers', (markerData) => {
