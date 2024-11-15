@@ -344,6 +344,10 @@ socket.on('updateMarkers', (markerData) => {
   markers.forEach(marker => marker.setMap(null)); 
   markers = [];
 
+  // Clear the pinned locations list
+  const pinnedLocationsList = document.getElementById('pinned-locations-list');
+  pinnedLocationsList.innerHTML = '';
+
   markerData.forEach(data => {
     const marker = new google.maps.Marker({
       position: { lat: data.lat, lng: data.lng },
@@ -358,6 +362,11 @@ socket.on('updateMarkers', (markerData) => {
     marker.addListener('click', () => {
       infoWindow.open(map, marker);
     });
+
+     // Add the pinned location to the list
+     const li = document.createElement('li');
+     li.textContent = data.description;
+     pinnedLocationsList.appendChild(li);
   });
 });
 

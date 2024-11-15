@@ -91,7 +91,8 @@ io.on('connection', (socket) => {
 
       socket.join(tripId);
       socket.emit('updateItinerary', trip.itinerary);
-      socket.emit('updateMarkers', trip.markers);
+      socket.emit('updateMarkers', trip.markers); // Emit the current markers to update pinned locations on join
+
 
       // Emit the map center and zoom to the user joining the trip
       socket.emit('centerMap', { lat: trip.mapCenter.lat, lng: trip.mapCenter.lng, zoom: trip.zoomLevel });
