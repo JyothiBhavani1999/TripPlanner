@@ -1,15 +1,25 @@
 const express = require('express');
-const http = require('http');
+const fs = require('fs')
+const https = require('https');
 const socketIO = require('socket.io');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app);
+
+// Load SSL/TLS certificates
+const options = {
+  key: fs.readFileSync('certificates/server.key'),  // Path to your private key
+  cert: fs.readFileSync('certificates/server.cert') // Path to your certificate
+};
+
+// Create an HTTPS server
+const server = https.createServer(options, app);
+
 const io = socketIO(server);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8443;
 const dbURL = process.env.MONGODB_URI;
 
 // Connect to MongoDB
@@ -179,5 +189,5 @@ io.on('connection', (socket) => {
 
 // Start the server
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running at https://localhost:${PORT}`);
 });

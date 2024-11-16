@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://localhost:8443');
 
 const tripSection = document.getElementById('trip-section');
 const mainContent = document.getElementById('main-content');
