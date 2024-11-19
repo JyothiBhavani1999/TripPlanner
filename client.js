@@ -60,7 +60,9 @@ countrySelect.addEventListener('change', () => {
     stateSelect.style.display = 'none'; 
   }
 });
-
+// Add DirectionsService and DirectionsRenderer for routing
+let directionsService;
+let directionsRenderer;
 // Initialize Google Map when called
 function initMap() {
   map = new google.maps.Map(mapElement, {
@@ -68,6 +70,12 @@ function initMap() {
     zoom: 2
   });
 
+  // Initialize DirectionsService and DirectionsRenderer
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
+    suppressMarkers: true // Suppress default markers to use custom markers
+  });
   // Initialize the search bar for location search
   const input = document.getElementById("map-search");
   const searchBox = new google.maps.places.SearchBox(input);
@@ -152,6 +160,66 @@ function initMap() {
     map.fitBounds(bounds);
   });
 }
+// Add function to update route connecting markers
+function updateRoute() {
+  if (markers.length < 2) return; // No route if fewer than 2 markers
+
+  const waypoints = markers.slice(1, markers.length - 1).map(marker => ({
+    location: marker.position,
+    stopover: true
+  }));
+
+  const request = {
+    origin: markers[0].position,
+    destination: markers[markers.length - 1].position,
+    waypoints: waypoints,
+    travelMode: 'DRIVING' // Change to 'WALKING', 'BICYCLING', etc. if needed
+  };
+
+  directionsService.route(request, (result, status) => {
+    if (status === 'OK') {
+      directionsRenderer.setDirections(result);
+
+      // Extract and display total distance and duration
+      const route = result.routes[0];
+      let totalDistance = 0;
+      let totalDuration = 0;
+
+      route.legs.forEach(leg => {
+        totalDistance += leg.distance.value;
+        totalDuration += leg.duration.value;
+      });
+
+      alert(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km, Total Duration: ${(totalDuration / 60).toFixed(2)} minutes`);
+    } else {
+      console.error('Directions request failed due to ' + status);
+    }
+  });
+}
+
+// Update socket listener for marker updates to call updateRoute
+socket.on('updateMarkers', (markerData) => {
+  markers.forEach(marker => marker.setMap(null));
+  markers = [];
+
+  markerData.forEach(data => {
+    const marker = new google.maps.Marker({
+      position: { lat: data.lat, lng: data.lng },
+      map: map
+    });
+    markers.push(marker);
+
+    // Display info window with description on marker click
+    const infoWindow = new google.maps.InfoWindow({
+      content: data.description,
+    });
+    marker.addListener('click', () => {
+      infoWindow.open(map, marker);
+    });
+  });
+
+  updateRoute(); // Update the route whenever markers are updated
+});
 // Signup
 signupBtn.addEventListener('click', () => {
   const username = signupUsername.value;
