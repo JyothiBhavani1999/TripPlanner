@@ -463,6 +463,70 @@ socket.on('updateMarkers', (markerData) => {
   });
 });
 
+const backToJoinBtn = document.getElementById('back-to-join-btn');
+
+// Function to toggle the visibility of the "Back to Join Trip" button
+function toggleBackButton(visible) {
+  backToJoinBtn.style.display = visible ? 'block' : 'none';
+}
+
+// Function to show the main content (map and chat)
+function showMainContent() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('trip-section').style.display = 'none';
+  document.getElementById('main-content').style.display = 'flex';
+
+  // Ensure the "Back to Join Trip" button is visible on the main page
+  toggleBackButton(true);
+}
+
+// Function to show the Join Trip section
+function showJoinTripPage() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('trip-section').style.display = 'block';
+
+  // Hide the "Back to Join Trip" button while on the Join Trip page
+  toggleBackButton(false);
+}
+
+// Function to show the Login/Signup section
+function showLoginPage() {
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('trip-section').style.display = 'none';
+  document.getElementById('auth-section').style.display = 'block';
+
+  // Hide the "Back to Join Trip" button while on the Login page
+  toggleBackButton(false);
+}
+
+// Event listener for the "Back to Join Trip" button
+backToJoinBtn.addEventListener('click', () => {
+  showJoinTripPage();
+});
+
+// Handle transitions after login or signup
+loginBtn.addEventListener('click', () => {
+  // Simulate successful login and go to the Join Trip page
+  showJoinTripPage();
+});
+
+signupBtn.addEventListener('click', () => {
+  // Simulate successful signup and go to the Join Trip page
+  showJoinTripPage();
+});
+
+// Handle joining a trip
+joinTripBtn.addEventListener('click', () => {
+  // Simulate joining a trip and transition to the main page
+  const tripId = document.getElementById('trip-id').value.trim();
+  if (tripId) {
+    showMainContent();
+  } else {
+    alert('Please enter a Trip ID to join a trip.');
+  }
+});
+
 
 // Listen for the event to center the map on the saved location
 socket.on('centerMap', ({ lat, lng, zoom }) => {

@@ -210,6 +210,23 @@
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  padding-top: 70px; /* Space below the fixed header */
+  padding-top: 20px; /* Space below the fixed header */
   min-height: 100vh; /* Ensures the background extends to the bottom of the page */
+}
+
+/* Taskbar Button Styling */
+.taskbar-button {
+  position: absolute; /* Place it inside the header */
+  left: 20px; /* Adjust position from the left edge */
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
