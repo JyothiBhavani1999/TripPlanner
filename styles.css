@@ -10,6 +10,7 @@
   z-index: 1000;
   text-align: center;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
 }
 
 .header h1, .header p {
@@ -26,6 +27,7 @@
   display: flex;
   flex-direction: row;
   margin-top: 70px; /* Space below the fixed header */
+ 
 }
 
 #main-content {
@@ -34,6 +36,7 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 20px; /* Uniform spacing between sections */
+
 }
 
 /* Itinerary Section */
@@ -200,4 +203,13 @@
 
 #join-trip-btn:hover {
   background-color: #1e8449;
+}
+
+.background-wrapper {
+  background-image: url('bg.jpg'); /* Replace with your image path */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding-top: 70px; /* Space below the fixed header */
+  min-height: 100vh; /* Ensures the background extends to the bottom of the page */
 }
