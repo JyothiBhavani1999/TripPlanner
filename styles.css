@@ -36,22 +36,58 @@
   gap: 20px; /* Uniform spacing between sections */
 }
 
-/* Itinerary Section - Sidebar */
+/* Itinerary Section */
 #itinerary-section {
   width: 25%; /* Balanced width for usability */
-  margin-right: 20px; 
-  position: sticky; 
+  margin-right: 20px;
+  position: sticky;
   top: 80px; /* Adjusted for sticky behavior with header */
+  display: flex;
+  flex-direction: column; /* Ensures vertical stacking of itinerary and pinned locations */
 }
 
 #itinerary-list {
-  max-height: 400px;
+  max-height: 250px;
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #f7f9fc;
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px; /* Add spacing below the itinerary items */
+}
+
+/* Pinned Locations Section */
+#pinned-locations-section {
+  margin-top: 0; /* Remove any extra margin */
+}
+
+#pinned-locations-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f7f9fc;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  list-style-type: none;
+}
+
+#pinned-locations-list li {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+#pinned-locations-list li:hover {
+  background-color: #f0f8ff;
+  border-color: #3498db;
 }
 
 /* Chat Section */
@@ -62,7 +98,7 @@
 }
 
 #chat-window {
-  height: 450px; 
+  height: 450px;
   border: 1px solid #ddd;
   border-radius: 5px;
   overflow-y: auto;
@@ -87,7 +123,7 @@
 
 /* Search Bar Styling Above the Map */
 .map-search {
-  width: 100%; 
+  width: 100%;
   margin-bottom: 10px;
   padding: 10px;
   font-size: 14px;

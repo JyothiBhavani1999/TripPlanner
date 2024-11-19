@@ -433,10 +433,13 @@ socket.on('receiveMessage', (data) => {
 });
 
 
-// Listen for marker updates from the server
+// Listen for marker updates and update pinned locations list
 socket.on('updateMarkers', (markerData) => {
-  markers.forEach(marker => marker.setMap(null)); 
+  markers.forEach(marker => marker.setMap(null)); // Clear existing markers
   markers = [];
+
+  const pinnedLocationsList = document.getElementById('pinned-locations-list');
+  pinnedLocationsList.innerHTML = ''; // Clear pinned locations list
 
   markerData.forEach(data => {
     const marker = new google.maps.Marker({
@@ -444,6 +447,11 @@ socket.on('updateMarkers', (markerData) => {
       map: map
     });
     markers.push(marker);
+
+    // Add location to pinned locations list
+    const listItem = document.createElement('li');
+    listItem.textContent = data.description;
+    pinnedLocationsList.appendChild(listItem);
 
     // Display info window with description on marker click
     const infoWindow = new google.maps.InfoWindow({
@@ -454,6 +462,7 @@ socket.on('updateMarkers', (markerData) => {
     });
   });
 });
+
 
 // Listen for the event to center the map on the saved location
 socket.on('centerMap', ({ lat, lng, zoom }) => {
